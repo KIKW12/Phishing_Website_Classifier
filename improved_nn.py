@@ -46,7 +46,7 @@ class NN():
 
 
     #function to standardize features
-    def _scale_features(self, X, fit=False):
+    def scale_features(self, X, fit=False):
         '''Custom feature scaling implementation (standardization)
         Remember that differences in scale can lead to an uneven optimization process,
         where larger values dominate the learning process'''
@@ -62,12 +62,12 @@ class NN():
 
 
     #sigmoid activation function
-    def _sigmoid(self, z):
+    def zigmoid(self, z):
         z = np.clip(z, -500, 500)  #to avoid overflow
         return 1 / (1 + np.exp(-z))
 
     #ReLU activation function
-    def _relu(self, z):
+    def relu(self, z):
         return np.maximum(0, z)
 
     #derivative of ReLU
@@ -75,11 +75,11 @@ class NN():
         return (z > 0).astype(float)
 
 
-    def _forward_propagation(self, X):
+    def feed_forward(self, X):
         self.z1 = np.dot(X, self.w1) + self.b1 #matrix multiplication between the input data and w1 and bias
-        self.a1 = self._relu(self.z1) #applies ReLU
+        self.a1 = self.relu(self.z1) #applies ReLU
         self.z2 = np.dot(self.a1, self.w2) + self.b2 # multiplication of activated output from the hidden layer
-        self.a2 = self._sigmoid(self.z2) #applies simoig
+        self.a2 = self.zigmoid(self.z2) #applies simoig
         return self.a2 #returns a probability between 0 and 1
 
     #binary cross-entropy
@@ -90,7 +90,7 @@ class NN():
         loss = -np.mean(y * np.log(predict) + (1 - y) * np.log(1 - predict))
         return loss
 
-    def _backward_propagation(self, X, y, learning_rate=0.01, momentum=0.9):
+    def back_propagation(self, X, y, learning_rate=0.01, momentum=0.9):
         m = X.shape[0]
 
         #output layer
@@ -120,7 +120,7 @@ class NN():
         y = y.reshape(-1, 1) #reshape array with 1 column and as many rows as necessary 
 
         #transform the features
-        X_scaled = self._scale_features(X, fit=True)
+        X_scaled = self.scale_features(X, fit=True)
 
         #track the best model weights and lowest loss encountered during training
         best_loss = float('inf') #initially infinity, updates to the lowest in each iteration
@@ -134,11 +134,11 @@ class NN():
                 batch_X = X_scaled[j:j+batch_size]
                 batch_y = y[j:j+batch_size]
 
-                y_hat = self._forward_propagation(batch_X)
-                self._backward_propagation(batch_X, batch_y, learning_rate, momentum)
+                y_hat = self.feed_forward(batch_X)
+                self.back_propagation(batch_X, batch_y, learning_rate, momentum)
 
             #calculate loss on full dataset
-            full_predictions = self._forward_propagation(X_scaled)
+            full_predictions = self.feed_forward(X_scaled)
             current_loss = self._loss(full_predictions, y)
 
             #save best weights and biases
@@ -165,10 +165,10 @@ class NN():
         X = X.values if isinstance(X, pd.DataFrame) else X #convert to np array
 
         #scale features
-        X_scaled = self._scale_features(X)
+        X_scaled = self.scale_features(X)
 
         #make prediction
-        y_hat = self._forward_propagation(X_scaled)
+        y_hat = self.feed_forward(X_scaled)
         return (y_hat >= 0.5).astype(int)
 
     def accuracy_measurement(self, y_pred, y_true):
