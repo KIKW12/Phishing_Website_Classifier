@@ -62,7 +62,7 @@ class NN():
 
 
     #sigmoid activation function
-    def zigmoid(self, z):
+    def sigmoid(self, z):
         z = np.clip(z, -500, 500)  #to avoid overflow
         return 1 / (1 + np.exp(-z))
 
@@ -71,7 +71,7 @@ class NN():
         return np.maximum(0, z)
 
     #derivative of ReLU
-    def _relu_derivative(self, z):
+    def relu_derivative(self, z):
         return (z > 0).astype(float)
 
 
@@ -79,7 +79,7 @@ class NN():
         self.z1 = np.dot(X, self.w1) + self.b1 #matrix multiplication between the input data and w1 and bias
         self.a1 = self.relu(self.z1) #applies ReLU
         self.z2 = np.dot(self.a1, self.w2) + self.b2 # multiplication of activated output from the hidden layer
-        self.a2 = self.zigmoid(self.z2) #applies simoig
+        self.a2 = self.sigmoid(self.z2) #applies simoig
         return self.a2 #returns a probability between 0 and 1
 
     #binary cross-entropy
@@ -99,7 +99,7 @@ class NN():
         db2 = np.sum(dz2, axis=0, keepdims=True) / m
 
         #hidden layer
-        dz1 = np.dot(dz2, self.w2.T) * self._relu_derivative(self.z1)
+        dz1 = np.dot(dz2, self.w2.T) * self.relu_derivative(self.z1)
         dw1 = np.dot(X.T, dz1) / m
         db1 = np.sum(dz1, axis=0, keepdims=True) / m
 

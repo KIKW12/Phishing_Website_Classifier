@@ -17,7 +17,7 @@
       </h1>
 
       <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Single URL Classification</h2>
+        <h2 class="text-xl font-semibold mb-4">URL Classification</h2>
         <div class="flex gap-4 mb-4">
           <input
             type="text"
@@ -37,41 +37,12 @@
             <p class="font-semibold">
               Result: <span id="classification"></span>
             </p>
-            <p class="mt-2 font-semibold">Features:</p>
-            <pre
-              id="features"
-              class="bg-gray-100 p-4 rounded mt-2 overflow-x-auto"
-            ></pre>
+            
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold mb-4">Batch Classification</h2>
-        <div class="mb-4">
-          <textarea
-            id="batchUrls"
-            rows="5"
-            placeholder="Enter URLs (one per line)"
-            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          ></textarea>
-        </div>
-        <button
-          onclick="classifyBatch()"
-          class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          Classify Batch
-        </button>
-        <div id="batchResult" class="hidden mt-4">
-          <h3 class="font-semibold mb-2">Results:</h3>
-          <div
-            id="batchResults"
-            class="bg-gray-100 p-4 rounded overflow-x-auto"
-          ></div>
-        </div>
-      </div>
-    </div>
-
+      
     <script>
       async function classifyURL() {
         const url = document.getElementById("urlInput").value;
@@ -106,7 +77,7 @@
           classification.className = data.is_malicious
             ? "text-red-600"
             : "text-green-600";
-          features.textContent = JSON.stringify(data.features, null, 2);
+          //features.textContent = JSON.stringify(data.features, null, 2);
 
           resultDiv.style.display = "block";
         } catch (error) {
@@ -114,67 +85,7 @@
         }
       }
 
-      async function classifyBatch() {
-        const urls = document
-          .getElementById("batchUrls")
-          .value.split("\n")
-          .map((url) => url.trim())
-          .filter((url) => url);
-
-        if (urls.length === 0) {
-          alert("Please enter at least one URL");
-          return;
-        }
-
-        try {
-          const response = await fetch("/batch_classify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ urls }),
-          });
-
-          const data = await response.json();
-
-          if (data.error) {
-            throw new Error(data.error);
-          }
-
-          const batchResult = document.getElementById("batchResult");
-          const batchResults = document.getElementById("batchResults");
-
-          batchResults.innerHTML = data.results
-            .map(
-              (result) => `
-                    <div class="mb-4 p-4 rounded ${
-                      result.is_malicious ? "bg-red-100" : "bg-green-100"
-                    }">
-                        <p class="font-semibold">URL: ${result.url}</p>
-                        <p class="font-semibold ${
-                          result.is_malicious
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }">
-                            Classification: ${
-                              result.is_malicious ? "Malicious" : "Safe"
-                            }
-                        </p>
-                        <pre class="mt-2 text-sm">${JSON.stringify(
-                          result.features,
-                          null,
-                          2
-                        )}</pre>
-                    </div>
-                `
-            )
-            .join("");
-
-          batchResult.style.display = "block";
-        } catch (error) {
-          alert("Error: " + error.message);
-        }
-      }
+      
     </script>
   </body>
 </html>

@@ -1,10 +1,9 @@
-# app.py
 from flask import Flask, request, jsonify, render_template
 import numpy as np
 import pandas as pd
 from urllib.parse import urlparse
 import re
-from improved_nn import NN  # Your neural network class
+from improved_nn import NN 
 import os
 
 app = Flask(__name__)
@@ -12,46 +11,54 @@ app = Flask(__name__)
 # Initialize the model
 # app.py
 model = NN()
-if os.path.exists('w1.npy') and os.path.exists('means.npy'):
-    model.load_model()
-else:
-    raise FileNotFoundError("Model weights or scaling parameters not found. Please train the model first.")
+model.load_model()
 
 def extract_features(url):
-    """Extract features from a single URL."""
-    features = {}
     
     # Check for IP address
-    features['use_of_ip'] = 1 if re.match(
-        r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$',
-        urlparse(url).netloc
-    ) else 0
-    
+    ip_regex = r'(([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\/)|(0x[0-9a-fA-F]{1,2}\.[0x[0-9a-fA-F]{1,2}\.[0x[0-9a-fA-F]{1,2}\.[0x[0-9a-fA-F]{1,2]})'
+
     # Count specific characters
-    features['count.'] = url.count('.')
-    features['@ Precence'] = 1 if '@' in url else 0
-    features['- Precence'] = 1 if '-' in url else 0
-    features['∼ Precence'] = 1 if '~' in url else 0
-    
+    dot_regex = r'\.'
+    at_regex = r'@'
+    dash_regex = r'\-'
+    tilde_regex = r'~'
+
     # Count embedded domains
-    features['count_embed_domian'] = len(re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', url))
-    
-    # Check for suspicious TLD
+    embed_domain_regex = r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+
+    # Check for suspicious TLDs
     suspicious_tlds = ['.zip', '.review', '.country', '.kim', '.cricket', '.science', '.work', '.party', '.gq', '.link']
-    features['sus_url'] = 1 if any(tld in url.lower() for tld in suspicious_tlds) else 0
-    
+
     # Check for URL shortening services
     shortening_services = ['bit.ly', 'goo.gl', 't.co', 'tinyurl.com', 'is.gd']
+    features = {}
+
+    # Check for IP address
+    features['use_of_ip'] = 1 if re.search(ip_regex, url) else 0
+
+    # Count specific characters
+    features['count.'] = len(re.findall(dot_regex, url))
+    features['@ Precence'] = 1 if re.search(at_regex, url) else 0
+    features['- Precence'] = 1 if re.search(dash_regex, url) else 0
+    features['∼ Precence'] = 1 if re.search(tilde_regex, url) else 0
+
+    # Count embedded domains
+    features['count_embed_domian'] = len(re.findall(embed_domain_regex, url))
+
+    # Check for suspicious TLD
+    features['sus_url'] = 1 if any(tld in url.lower() for tld in suspicious_tlds) else 0
+
+    # Check for URL shortening services
     features['short_url'] = 1 if any(service in url.lower() for service in shortening_services) else 0
-    
+
     # Check HTTPS in domain
-    features['HTTPS in Domain'] = 1 if 'https' in urlparse(url).netloc.lower() else 0
-    
+    features['HTTPS in Domain'] = 1 if urlparse(url).scheme.lower() == 'https' else 0
+
     # URL length
     features['url_length'] = len(url)
-    
-    return features
 
+    return features
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -88,38 +95,6 @@ def classify_url():
         }
         
         return jsonify(result)
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/batch_classify', methods=['POST'])
-def batch_classify():
-    try:
-        data = request.get_json()
-        
-        if not data or 'urls' not in data:
-            return jsonify({'error': 'No URLs provided'}), 400
-        
-        urls = data['urls']
-        results = []
-        
-        for url in urls:
-            features = extract_features(url)
-            feature_df = pd.DataFrame([features])
-            feature_df = feature_df[[
-                'use_of_ip', 'count.', '@ Precence', '- Precence', '∼ Precence',
-                'count_embed_domian', 'sus_url', 'short_url', 'HTTPS in Domain', 'url_length'
-            ]]
-            
-            prediction = model.predict(feature_df)
-            
-            results.append({
-            'url': url,
-            'is_malicious': bool(prediction[0][0] == 0),  # Added bool() conversion
-            'features': features
-            })
-        
-        return jsonify({'results': results})
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
