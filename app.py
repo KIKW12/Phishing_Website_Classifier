@@ -90,7 +90,7 @@ def classify_url():
         # we need to invert the prediction to get the correct is_malicious value
         result = {
             'url': url,
-            'is_malicious': bool(prediction[0][0] == 0),  # Added bool() conversion
+            'is_malicious': bool(prediction[0][0] == 1),  # Added bool() conversion
             'features': features
         }
         
