@@ -246,23 +246,6 @@ Phishing_Website_Classifier/
 ├── *.npy                      # Trained model weights
 └── df_*.csv                   # Processed datasets
 ```
-
-## 👨‍💻 About the Developer
-
-This project showcases advanced skills in:
-- **Machine Learning Engineering**
-- **Cybersecurity Applications**
-- **Full-Stack Development**
-- **Data Science & Analytics**
-
-Perfect for roles in:
-- Machine Learning Engineer
-- Data Scientist
-- Cybersecurity Analyst
-- Full-Stack Developer
-- Research & Development
----
-
 ### 🌟 **"Transforming cybersecurity through intelligent automation and machine learning innovation"**
 
 ---
